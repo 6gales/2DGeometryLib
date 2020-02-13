@@ -50,6 +50,33 @@ TEST(AreaTest, ManyPointsRectangle)
 	}
 
 	geometry2d::Polygon square{ points };
+	EXPECT_EQ(square.getPoints().size(), 4);
+	EXPECT_EQ(square.area(), 400);
+}
+
+TEST(PointsOnSideOptimization, Bad0Point)
+{
+	std::vector<geometry2d::Point> points;
+	for (int i = -9; i < 10; i++)
+	{
+		points.emplace_back(i, -10);
+	}
+	for (int i = -10; i < 10; i++)
+	{
+		points.emplace_back(10, i);
+	}
+	for (int i = 10; i > -10; i--)
+	{
+		points.emplace_back(i, 10);
+	}
+	for (int i = 10; i > -10; i--)
+	{
+		points.emplace_back(-10, i);
+	}
+	points.emplace_back(-10, -10);
+
+	geometry2d::Polygon square{ points };
+	EXPECT_EQ(square.getPoints().size(), 4);
 	EXPECT_EQ(square.area(), 400);
 }
 

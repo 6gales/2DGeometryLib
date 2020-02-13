@@ -24,7 +24,7 @@ void geometry2d::Polygon::computeArea()
 	_area = 0.5 * abs(_area);
 }
 
-geometry2d::Polygon::Polygon(const std::vector<Point>& collection) : points{ collection }
+geometry2d::Polygon::Polygon(const std::vector<Point>& collection)
 {
 	if (collection.empty())
 	{
@@ -33,13 +33,32 @@ geometry2d::Polygon::Polygon(const std::vector<Point>& collection) : points{ col
 
 	min = collection[0];
 	max = collection[0];
-	for (size_t i = 1; i < collection.size(); i++)
+	
+	for (size_t i = 0; i < collection.size(); i++)
 	{
+		//Both isPointInside and area calculation has O(n) complexity, n - number of sides(also points)
+		//We can decrease n by deleting points, that lies on the side between two other points
+		if (points.size() >= 2 && isPointOnLine(points.back(), {points[points.size() - 2], collection[i]}))
+		{
+			points.pop_back();
+		}
+		points.push_back(collection[i]);
+
 		max.x = std::max(max.x, collection[i].x);
 		max.y = std::max(max.y, collection[i].y);
 
 		min.x = std::min(min.x, collection[i].x);
 		min.y = std::min(min.y, collection[i].y);
+	}
+	
+	if (points.size() >= 3 && isPointOnLine(points.back(), { points[points.size() - 2], points[0] }))
+	{
+		points.pop_back();
+	}
+	if (points.size() >= 3 && isPointOnLine(points[0], { points.back(), points[1] }))
+	{
+		std::swap(points[0], points.back());
+		points.pop_back();
 	}
 
 	computeArea();
@@ -165,19 +184,19 @@ bool geometry2d::isPointOnLine(const Point& point, const std::pair<Point, Point>
 
 	double cross = dxPoint * dyLine - dyPoint * dxLine;
 
-	if (cross != 0)
+	if (cross > std::numeric_limits<double>::epsilon() || cross < -std::numeric_limits<double>::epsilon())
 	{
 		return false;
 	}
 
 	if (abs(dxLine) >= abs(dyLine))
 	{
-		return dxLine > 0 ?
+		return dxLine > std::numeric_limits<double>::epsilon() ?
 			line.first.x <= point.x && point.x <= line.second.x :
 			line.second.x <= point.x && point.x <= line.first.x;
 	}
 
-	return dyLine > 0 ?
+	return dyLine > std::numeric_limits<double>::epsilon() ?
 		line.first.y <= point.y && point.y <= line.second.y :
 		line.second.y <= point.y && point.y <= line.first.y;
 }
